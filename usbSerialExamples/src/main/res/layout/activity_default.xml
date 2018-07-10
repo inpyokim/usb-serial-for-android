@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/page_width"
+    android:layout_height="@dimen/page_height"
+    android:layout_marginTop="@dimen/page_top_margin"
+    android:paddingRight="@dimen/page_right_padding"
+    android:paddingLeft="@dimen/page_left_padding"
+    android:rotation="@integer/page_rotation"
+    android:background="#000000">
+
+    <!--<include-->
+        <!--layout="@layout/layout_default"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"/>-->
+
+</LinearLayout>

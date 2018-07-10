@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--<integer name="page_rotation">0</integer>-->
+
+    <integer name="animation_duration">500</integer>
+    <integer name="animation_duration_short">300</integer>
+
+    <integer name="page_rotation">270</integer>
+
+    <!--<dimen name="scroll_range_next">142</dimen>-->
+    <!--<dimen name="scroll_range_previous">-142</dimen>-->
+</resources>

@@ -21,8 +21,10 @@
 
 package com.hoho.android.usbserial.examples;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.AsyncTask;
@@ -139,6 +141,8 @@ public class DeviceListActivity extends Activity {
                 showConsoleActivity(port);
             }
         });
+
+
     }
 
     @Override

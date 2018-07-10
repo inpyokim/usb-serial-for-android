@@ -22,11 +22,15 @@
 package com.hoho.android.usbserial.examples;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -47,14 +51,14 @@ import java.util.concurrent.Executors;
  *
  * @author mike wakerly (opensource@hoho.com)
  */
-public class SerialConsoleActivity extends Activity {
+public class SerialConsoleActivity extends FragmentActivity implements VodFragment.VodListener {
 
     private final String TAG = SerialConsoleActivity.class.getSimpleName();
 
     /**
      * Driver instance, passed in statically via
      * {@link #show(Context, UsbSerialPort)}.
-     *
+     * <p>
      * <p/>
      * This is a devious hack; it'd be cleaner to re-create the driver using
      * arguments passed in with the {@link #startActivity(Intent)} intent. We
@@ -73,24 +77,26 @@ public class SerialConsoleActivity extends Activity {
 
     private SerialInputOutputManager mSerialIoManager;
 
+    private VodFragment vodFragment;
+
     private final SerialInputOutputManager.Listener mListener =
             new SerialInputOutputManager.Listener() {
 
-        @Override
-        public void onRunError(Exception e) {
-            Log.d(TAG, "Runner stopped.");
-        }
-
-        @Override
-        public void onNewData(final byte[] data) {
-            SerialConsoleActivity.this.runOnUiThread(new Runnable() {
                 @Override
-                public void run() {
-                    SerialConsoleActivity.this.updateReceivedData(data);
+                public void onRunError(Exception e) {
+                    Log.d(TAG, "Runner stopped.");
                 }
-            });
-        }
-    };
+
+                @Override
+                public void onNewData(final byte[] data) {
+                    SerialConsoleActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            SerialConsoleActivity.this.updateReceivedData(data);
+                        }
+                    });
+                }
+            };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -107,7 +113,8 @@ public class SerialConsoleActivity extends Activity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 try {
                     sPort.setDTR(isChecked);
-                }catch (IOException x){}
+                } catch (IOException x) {
+                }
             }
         });
 
@@ -116,10 +123,12 @@ public class SerialConsoleActivity extends Activity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 try {
                     sPort.setRTS(isChecked);
-                }catch (IOException x){}
+                } catch (IOException x) {
+                }
             }
         });
 
+        initVideo();
     }
 
 
@@ -138,10 +147,12 @@ public class SerialConsoleActivity extends Activity {
         finish();
     }
 
-    void showStatus(TextView theTextView, String theLabel, boolean theValue){
+    void showStatus(TextView theTextView, String theLabel, boolean theValue) {
         String msg = theLabel + ": " + (theValue ? "enabled" : "disabled") + "\n";
         theTextView.append(msg);
     }
+
+    private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 
     @Override
     protected void onResume() {
@@ -152,7 +163,14 @@ public class SerialConsoleActivity extends Activity {
         } else {
             final UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
+            PendingIntent permissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+//            IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+//            registerReceiver(mUsbReceiver, filter);
+
+            usbManager.requestPermission(sPort.getDriver().getDevice(), permissionIntent);
+
             UsbDeviceConnection connection = usbManager.openDevice(sPort.getDriver().getDevice());
+
             if (connection == null) {
                 mTitleTextView.setText("Opening device failed");
                 return;
@@ -160,7 +178,7 @@ public class SerialConsoleActivity extends Activity {
 
             try {
                 sPort.open(connection);
-                sPort.setParameters(115200, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
+                sPort.setParameters(9600, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
 
                 showStatus(mDumpTextView, "CD  - Carrier Detect", sPort.getCD());
                 showStatus(mDumpTextView, "CTS - Clear To Send", sPort.getCTS());
@@ -184,6 +202,9 @@ public class SerialConsoleActivity extends Activity {
             mTitleTextView.setText("Serial device: " + sPort.getClass().getSimpleName());
         }
         onDeviceStateChange();
+
+        vodFragment.initExoPlayer();
+        vodFragment.pauseExoPlayer();
     }
 
     private void stopIoManager() {
@@ -207,9 +228,34 @@ public class SerialConsoleActivity extends Activity {
         startIoManager();
     }
 
+    public int byteToint(byte[] arr) {
+//        return (arr[0] & 0xff) << 24 | (arr[1] & 0xff) << 16 | (arr[2] & 0xff) << 8 | (arr[3] & 0xff);
+        int value= 0;
+        for(int i=0; i<arr.length; i++)
+            value = (value << 8) | arr[i];
+        return value;
+    }
+
+
+    int preSensor = 0;
+    long lastTime = 0;
+
     private void updateReceivedData(byte[] data) {
-        final String message = "Read " + data.length + " bytes: \n"
-                + HexDump.dumpHexString(data) + "\n\n";
+
+        int sensor = byteToint(data);
+
+        Log.d("SENSOR", "sensor="+ sensor);
+
+        long curTime = System.currentTimeMillis();
+
+        if(sensor == 1 && preSensor != sensor && curTime-lastTime > 20000) {
+            lastTime = curTime;
+            vodFragment.playExoSeek(3000);
+        }
+
+        preSensor = sensor;
+
+        final String message = "Read " + data.length + " bytes: \n" + HexDump.dumpHexString(data) + "\n\n";
         mDumpTextView.append(message);
         mScrollView.smoothScrollTo(0, mDumpTextView.getBottom());
     }
@@ -218,7 +264,7 @@ public class SerialConsoleActivity extends Activity {
      * Starts the activity, using the supplied driver instance.
      *
      * @param context
-     * @param driver
+     * @param port
      */
     static void show(Context context, UsbSerialPort port) {
         sPort = port;
@@ -227,4 +273,34 @@ public class SerialConsoleActivity extends Activity {
         context.startActivity(intent);
     }
 
+    @Override
+    public void onInit() {
+
+    }
+
+    @Override
+    public void onEndVod() {
+
+    }
+
+    private void initVideo() {
+
+        int id = getRawResIdByName("sensor_test");
+//        Uri video = Uri.parse("android.resource://" + getPackageName() + "/" + id);
+        String path = "android.resource://" + getPackageName() + "/" + id;
+
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        vodFragment = VodFragment.newInstance(path, false);
+        ft.replace(R.id.fragment_vod, vodFragment);
+        ft.commit();
+
+    }
+
+    public int getRawResIdByName(String resName) {
+        String pkgName = this.getPackageName();
+        // Return 0 if not found.
+        int resID = this.getResources().getIdentifier(resName, "raw", pkgName);
+        PidDebug.i("AndroidVideoView", "Res Name: " + resName + "==> Res ID = " + resID);
+        return resID;
+    }
 }

@@ -1,0 +1,31 @@
+<resources>
+    <!--<dimen name="page_width">1080px</dimen>-->
+    <!--<dimen name="page_height">1920px</dimen>-->
+    <!--<dimen name="layout_width">1080px</dimen>-->
+    <!--<dimen name="layout_height">1920px</dimen>-->
+    <!--<dimen name="page_left_padding">0px</dimen>-->
+    <!--<dimen name="page_right_padding">0px</dimen>-->
+    <!--<dimen name="page_top_margin">0px</dimen>-->
+
+
+    <dimen name="page_width">1920px</dimen>
+    <dimen name="page_height">1920px</dimen>
+    <dimen name="layout_width">1080px</dimen>
+    <dimen name="layout_height">1920px</dimen>
+    <dimen name="page_left_padding">420px</dimen>
+    <dimen name="page_right_padding">420px</dimen>
+    <dimen name="page_top_margin">-420px</dimen>
+
+    <dimen name="schedule_padding">47px</dimen>
+    <!--<dimen name="schedule_padding">150px</dimen>-->
+
+    <dimen name="schedule_listview_horizontal_margin">32px</dimen>
+
+    <dimen name="silhouette_top_margin">312px</dimen>
+    <dimen name="fitting_top_margin">537px</dimen>
+    <dimen name="fitting_bottom_margin">56px</dimen>
+
+    <dimen name="layout_health_height">1132px</dimen>
+    <dimen name="text_margin">16dp</dimen>
+
+</resources>
